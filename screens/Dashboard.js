@@ -1,151 +1,193 @@
-
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Button, Text, StyleSheet, Alert, SafeAreaView} from 'react-native';
+import { View, BackHandler, StyleSheet, SafeAreaView} from 'react-native';
 import * as firebase from 'firebase';
-import {loggingOut} from '../API/firebaseMethods';
-import Feather from 'react-native-vector-icons/Feather';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import { StackActions } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
-
+import { ScrollView } from 'react-native-gesture-handler';
+import CustomListProject from '../components/CustomListProject';
+import Header from '../components/Header'
+import { LinearGradient } from 'expo-linear-gradient';
+import CustomListProjectHistory from '../components/CustomListProjectHistory';
 
 const Top = createMaterialTopTabNavigator();
 
 export default function Dashboard({ navigation }) {
+  const [projectList, setProjectList] = useState([]);
+  const [projectListHistory, setProjectListHistory] = useState([]);
+  const db = firebase.firestore();
   let currentUserUID = firebase.auth().currentUser.uid;
-  const [firstName, setFirstName] = useState('');
 
   useEffect(() => {
-    async function getUserInfo(){
-      let doc = await firebase
-      .firestore()
-      .collection('users')
-      .doc(currentUserUID)
-      .get();
+    const backAction = () => {
+      [
+        {
+          onPress: () => null,
+        }
+      ];
+      return true;
+    };
 
-      if (!doc.exists){
-        Alert.alert('No user data found!')
-      } else {
-        let dataObj = doc.data();
-        setFirstName(dataObj.firstName)
-      }
-    }
-    getUserInfo();
-  })
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
 
-  const handlePress = () => {
-    loggingOut();
-    navigation.replace('Home');
-  };
+    return () => backHandler.remove();
+  }, []);
+  
+  useEffect(() => {
+    const unsubscribe = db.collection('projects').doc(currentUserUID).collection('userprojects').onSnapshot(snapshot => (
+      setProjectList(snapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data(),
+        data2: doc.data(),
+        data3: doc.data()
+      })))
+    ))
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = db.collection('projects').doc(currentUserUID).collection('userprojectshistory').onSnapshot(snapshot => (
+      setProjectListHistory(snapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data(),
+        data2: doc.data(),
+        data3: doc.data()
+      })))
+    ))
+  }, [])
 
   const Projects = () => {
     return (
-    <View style={styles.projectStyle}>
-        <Text >Projects List</Text>
-      </View>
+    <ScrollView style={{backgroundColor: 'white'}}>
+      {projectList.map(({ id, data: { projectName }, data2: {projectDetails}, data3: {photoUrl} }) => (
+         <CustomListProject key={id} id={id} projectName={ projectName } projectDetails={projectDetails} photoUrl={photoUrl} />
+      ))}
+    </ScrollView>
     )
   }
 
-  const Chats = () => {
+  const History = () => {
     return (
-    <View style={styles.projectStyle}>
-        <Text >Chat List</Text>
-      </View>
-    )
-  }
-
-  const NewProject = () => {
-    return (
-    <View style={styles.projectStyle}>
-        <Text >New Project</Text>
-      </View>
+    <ScrollView style={{backgroundColor: 'white'}}>
+      {projectListHistory.map(({ id, data: { projectName }, data2: {projectDetails}, data3: {photoUrl} }) => (
+         <CustomListProjectHistory key={id} id={id} projectName={ projectName } projectDetails={projectDetails} photoUrl={photoUrl} />
+      ))}
+    </ScrollView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.text1}>
-          <Text style={styles.text}>Hi {firstName}</Text>
+    <SafeAreaView>
+      <View style={styles.container}>
+      <LinearGradient colors={['rgba(34,193,195,1)', 'rgba(0,147,135,1)']} style={styles.container2}>
+            <View>
+        <Header/>
         </View>
-        <View>
-          <TouchableOpacity onPress={handlePress}>
-            <Feather
-              name='log-out'
-              color='white'
-              style={styles.signOut}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.footer}>
+      </LinearGradient>    
+      <View style={styles.list}>
           <Top.Navigator initialRouteName="Projects" 
-      tabBarOptions={{
-        labelStyle: { fontSize: 12, fontWeight: 'bold' },
-        activeTintColor: '#fff',
-        indicatorStyle: { backgroundColor: '#fff'},
-        style: { backgroundColor: '#009387' },
-      }}>
-            <Top.Screen name="New Project" component={NewProject}/>
+            tabBarOptions={{
+              labelStyle: { fontSize: 12, fontWeight: 'bold' },
+              activeTintColor: '#000',
+              indicatorStyle: { backgroundColor: '#000'},
+            }}>
             <Top.Screen name="Projects" component={Projects} />
-            <Top.Screen name="Chats" component={Chats} />
+            <Top.Screen name="History" component={History} />
           </Top.Navigator>
-        </View>
-    </SafeAreaView>
-  )
-}
+          </View>
+      </View>
+      </SafeAreaView>
+  );
+};
 
 
 const styles = StyleSheet.create({
-    button: {
-      width: 150,
-      padding: 5,
-      backgroundColor: '#000000',
-      borderWidth: 2,
-      borderColor: 'white',
-      borderRadius: 15,
-    },
-    signOut: {
-      text: 'right',
-      fontSize: 25,
-      fontStyle: 'italic',
-      fontWeight: 'bold',
-      color: 'white',
-      paddingRight: 10,
-      paddingTop: 15
-    },
     container: {
       height: '100%',
-      width: '100%',
+      width: '100%'
     },
-    projectStyle: {
-      flex: 1, justifyContent: 'center', alignItems: 'center'
+    container2: {
+      height: '40%',
     },
-    text: {
-      fontSize: 25,
-      fontStyle: 'italic',
-      fontWeight: 'bold',
-      color: 'white',
-      marginLeft: '3%'
-    }, 
-    text1: {
+    list: {
       flex: 1,
-      paddingTop: '3%'
-    },
-    header: {
-      flex: 0.1,
+      backgroundColor: 'white',
       flexDirection: 'row',
-      backgroundColor: '#009387',
+      marginHorizontal: 16,
+      borderRadius: 15,
+      paddingVertical: 20,
+      paddingHorizontal: 24,
+      marginTop: '-30%',
+      marginBottom: '3%',
+      shadowColor: 'black',
+      shadowOpacity: 0.48,
+      shadowRadius: 11.95,
     },
-    footer: {
+    backTextWhite: {
+      color: '#fff'
+    },
+    rowFront: {
+      backgroundColor: '#fff',
+      borderRadius: 5,
+      height: 60,
+      margin: 5,
+      marginBottom: 15,
+      shadowColor: '#999',
+      shadowOffset: {width: 0, height: 1},
+      shadowOpacity: 0.8,
+      shadowRadius: 2,
+      elevation: 5
+    },
+    rowFrontVisible: {
+      backgroundColor: '#fff',
+      borderRadius: 5,
+      height: 60,
+      padding: 10,
+      marginBottom: 15,
+    },
+    rowBack: {
+      alignItems: 'center',
+      backgroundColor: '#ddd',
       flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingLeft: 15,
+      margin: 5,
+      marginBottom: 15,
+      borderRadius: 5
     },
-    titleText: {
-      fontSize: 30,
+    backRightBtn: {
+      alignItems: 'flex-end',
+      bottom: 0,
+      justifyContent: 'center',
+      position: 'absolute',
+      top: 0,
+      width: 75,
+      paddingRight: 17
     },
-    nav: {
-      backgroundColor: '#009387',
-      color: '#009387'
-      }
+    backRightBtnLeft: {
+      backgroundColor: '#1f65ff',
+      right: 75
+    },
+    backRightBtnRight: {
+      backgroundColor: 'red',
+      right: 0,
+      borderTopRightRadius: 5,
+      borderBottomLeftRadius: 5
+    },
+    trash: {
+      height: 25,
+      width: 25,
+      marginRight: 7
+    },
+    title: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      marginBottom: 5,
+      color: '#666'
+    },
+    details: {
+      fontSize: 12,
+      color: '#999'
+    }
   });

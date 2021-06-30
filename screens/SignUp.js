@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, Keyboard ,StyleSheet, SafeAreaView, Button} from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, Alert, TouchableOpacity ,StyleSheet, SafeAreaView} from 'react-native';
 import { registration } from '../API/firebaseMethods';
 import * as Animatable from 'react-native-animatable';
 import { FontAwesome } from '@expo/vector-icons';
-
+import { ScrollView } from 'react-native-gesture-handler';
+import PhoneInput from 'react-native-phone-input'
+import {LinearGradient} from 'expo-linear-gradient';
 
 export default function SignUp({ navigation }) {
     const [firstName, setFirstName] = useState('');
@@ -11,6 +13,9 @@ export default function SignUp({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+    const [phoneNo, setPhoneNo] = useState('');
+    const phoneRef = useRef(undefined);
 
     const emptyState = () => {
         setFirstName('');
@@ -18,6 +23,8 @@ export default function SignUp({ navigation }) {
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setImageUrl('');
+        setPhoneNo('');
     };
 
     const handlePress = () => {
@@ -32,28 +39,33 @@ export default function SignUp({ navigation }) {
         Alert.alert('Confirm password field is required.');
         } else if (password !== confirmPassword) {
         Alert.alert('Password does not match!');
+        } else if (!phoneNo) {
+        Alert.alert('Please enter your NO!');
         } else {
-        registration(
-            email,
-            password,
-            lastName,
-            firstName,
-        );
-        navigation.navigate('Loading');
-        emptyState();
+            registration(
+                email,
+                password,
+                lastName,
+                firstName,
+                imageUrl,
+                phoneNo,
+                );
+            navigation.navigate('Loading');
+            emptyState();
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={['rgba(34,193,195,1)', 'rgba(0,147,135,1)']} >
             <View style={styles.header}>
                 <Text style={styles.header_text}>Create an account</Text>
-            </View>
-
+            </View>      
             <Animatable.View 
                 animation="fadeInUpBig"
                 style={styles.footer} 
                 >
+                    <ScrollView>
                 <View style={styles.action}>
                     <FontAwesome
                     name='user-o'
@@ -128,6 +140,15 @@ export default function SignUp({ navigation }) {
                     />
                 </View>
 
+                <View style={styles.action1}>
+                    <PhoneInput
+                    ref={phoneRef}
+                    value={phoneNo}
+                    onChangePhoneNumber={setPhoneNo} 
+                    />
+                </View>
+                
+                <Text style={{paddingLeft: 45, fontSize: 13}}>(*) Are required fields</Text>
                 <TouchableOpacity style={[styles.button, {marginTop: 10}]} onPress={handlePress}>
                     <Text style={styles.buttonText1}>SUBMIT</Text>
                 </TouchableOpacity>
@@ -137,25 +158,27 @@ export default function SignUp({ navigation }) {
                 <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Sign In')}>
                     <Text style={styles.buttonText}>Sign In</Text>
                 </TouchableOpacity>
-
-            </Animatable.View>
+                </ScrollView>
+            </Animatable.View>          
+            </LinearGradient>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     header: {
-        height: '25%',
+        height: '20%',
         justifyContent: 'flex-end',
         paddingHorizontal: 20,
-        paddingBottom: 50
+        paddingBottom: 50,
     },
     footer: {
+        height: '100%',
         backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         paddingHorizontal: 20,
-        paddingVertical: 30
+        paddingVertical: 30,
     },
     buttonText: {
         width: '80%',
@@ -166,7 +189,7 @@ const styles = StyleSheet.create({
         fontSize: 17,
         color: 'white',
         textAlign: 'center',
-        backgroundColor: '#009387',
+        backgroundColor: 'rgba(34,193,195,1)',
         borderRadius: 30,
     },
     buttonText1: {
@@ -176,15 +199,15 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         fontWeight: 'bold',
         fontSize: 17,
-        color: '#009387',
+        color: 'rgba(34,193,195,1)',
         textAlign: 'center',
         backgroundColor: '#fff',
-        borderRadius: 30,
-        borderColor: '#009387',
+        borderRadius: 20,
+        borderColor: 'rgba(34,193,195,1)',
         borderWidth: 2,
     },
     container: {
-        backgroundColor: '#009387'
+        height: '100%'
     },
     action: {
         flexDirection: 'row',
@@ -197,6 +220,15 @@ const styles = StyleSheet.create({
         padding: 7,
         margin: '2%',
     },
+    action1: {
+        width: '90%',
+        alignSelf: 'center',
+        borderWidth: 2,
+        borderColor:'#a4eddf',
+        borderRadius: 30,
+        padding: 9,
+        margin: '2%',
+    },
     header_text: {
         color: '#fff',
         fontWeight: 'bold',
@@ -206,8 +238,8 @@ const styles = StyleSheet.create({
     inlineText: {
         color: '#000',
         fontWeight: 'bold',
-        fontSizeP: 30,
-        paddingLeft: 20,
+        fontSize: 15,
+        paddingLeft: 45,
         margin: '1%'
     },
     textInput: {

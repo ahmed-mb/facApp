@@ -2,15 +2,16 @@
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import * as firebase from 'firebase';
+import * as Animatable from 'react-native-animatable';
 
 export default function LoadingScreen({ navigation }) {
   useEffect(
      () => {
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-          navigation.replace('Dashboard');
+          navigation.navigate('Dashboard');
         } else {
-          navigation.replace('Sign Up');
+          navigation.navigate('Sign In');
         }
       });
     }
@@ -18,7 +19,10 @@ export default function LoadingScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size='large' />
+    <Animatable.View 
+                animation="fadeIn">
+      <ActivityIndicator size='large' color='#009387' />
+    </Animatable.View>
     </View>
   );
 }

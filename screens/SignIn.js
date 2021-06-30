@@ -1,35 +1,55 @@
 
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Button, Text, TextInput, StyleSheet, Alert, SafeAreaView } from 'react-native';
-import Feather from 'react-native-vector-icons/Feather';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, BackHandler, Text, TextInput, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import {signIn} from '../API/firebaseMethods';
 import { FontAwesome } from '@expo/vector-icons';
-
+import {LinearGradient} from 'expo-linear-gradient';
 
 export default function SignIn({navigation}) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    useEffect(() => {
+        const backAction = () => {
+          [
+            {
+              onPress: () => null,
+            }
+          ];
+          return true;
+        };
+    
+        const backHandler = BackHandler.addEventListener(
+          "hardwareBackPress",
+          backAction
+        );
+    
+        return () => backHandler.remove();
+      }, []);
+
     const handlePress = () => {
         if (!email) {
         Alert.alert('Email field is required.');
         }
-
-        if (!password) {
+        else if (!password) {
         Alert.alert('Password field is required.');
         }
-
+        else {
         signIn(email, password);
         setEmail('');
         setPassword('');
+        navigation.navigate('Loading');
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={['rgba(34,193,195,1)', 'rgba(0,147,135,1)']}>
             <View style={styles.header}>
                 <Text style={styles.header_text}>WELCOME!</Text>
             </View>
+            
 
             <Animatable.View 
                 animation="fadeInUpBig"
@@ -47,6 +67,7 @@ export default function SignIn({navigation}) {
                         placeholder="Enter your email"
                         value={email}
                         onChangeText={(email) => setEmail(email)}
+                        keyboardType="email-address"
                         autoCapitalize="none"
                     />
                 </View>
@@ -64,6 +85,7 @@ export default function SignIn({navigation}) {
                         autoCapitalize='none'
                         value={password}
                         onChangeText={(value) => setPassword(value)}
+                        secureTextEntry
                     />
                 </View>
 
@@ -78,19 +100,20 @@ export default function SignIn({navigation}) {
                 </TouchableOpacity>
 
             </Animatable.View>
+            </LinearGradient>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     header: {
-        flex: 1,
+        height: '20%',
         justifyContent: 'flex-end',
         paddingHorizontal: 20,
         paddingBottom: 50
     },
     footer: {
-        flex: 3,
+        height: '100%',
         backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
@@ -106,26 +129,26 @@ const styles = StyleSheet.create({
         fontSize: 17,
         color: 'white',
         textAlign: 'center',
-        backgroundColor: '#009387',
-        borderRadius: 30,
+        backgroundColor: 'rgba(34,193,195,1)',
+        borderRadius: 20,
     },
     buttonText1: {
         width: '80%',
         padding: 7,
+        paddingRight: 10,
         margin: '2%',
         alignSelf: 'center',
         fontWeight: 'bold',
         fontSize: 17,
-        color: '#009387',
+        color: 'rgba(34,193,195,1)',
         textAlign: 'center',
         backgroundColor: '#fff',
-        borderRadius: 30,
-        borderColor: '#009387',
+        borderRadius: 20,
+        borderColor: 'rgba(34,193,195,1)',
         borderWidth: 2,
     },
     container: {
-        flex: 1,
-        backgroundColor: '#009387'
+        height: '100%'
     },
     action: {
         flexDirection: 'row',
@@ -147,13 +170,13 @@ const styles = StyleSheet.create({
     inlineText: {
         color: '#000',
         fontWeight: 'bold',
-        fontSizeP: 30,
-        paddingLeft: 20,
+        fontSize: 15,
+        paddingLeft: 45,
         margin: '1%'
     },
     textInput: {
         flex: 1,
         paddingLeft: 10,
         color: '#05375a'
-    }
+    },
   });
